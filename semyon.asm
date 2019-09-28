@@ -1,5 +1,9 @@
 .module semyon
 
+LEDLEN = 5 - 1
+LEDLOC = 0x300
+PCON = 0x97
+
 .area INTV (ABS)
 .org 0x0000
 _int_reset:
@@ -9,11 +13,70 @@ _int_reset:
 .org 0x0090
 
 main:
-	jnb P3.5, clearg
+	mov r0, LEDLEN
+	mov DPH, LEDLOC >> 8
+	mov DPL, LEDLOC & 0xff
+main_loop:
+	mov r1, 0x04
+	mov a, r0
+	movc a, @a+DPTR
+	cjne a, 0xe4, cont
 	clr P3.2
+cont:
+	mov r2, a
+main_loop2:
+	;red = P3.5
+	;yellow = P3.4
+	;green = P3.2
+	;blue = P3.3
+	mov a, r2
+	anl a, 0x03
+blue:
+	cjne a, 0x03, green
+	clr P3.3
+	acall delay
+	setb P3.3
+	sjmp read_next_led
+green:
+	cjne a, 0x02, yellow
+	clr P3.2
+	acall delay
+	setb P3.2
+	sjmp read_next_led
+yellow:
+	cjne a, 0x01, red
+	clr P3.4
+	acall delay
+	setb P3.4
+	sjmp read_next_led
+red:
+	clr P3.5
+	acall delay
+	setb P3.5
+	
+read_next_led:
+	acall delay
+	mov a, r2
+	rr a
+	rr a
+	mov r2, a
+	djnz r1, main_loop2
+	djnz r0, main_loop
 	sjmp main
 
-	
-clearg:
-	setb P3.2
-	sjmp main
+
+delay:
+	cpl P3.5
+	mov r5, 0x02
+	mov r6, 0x00
+	mov r7, 0x00
+delay_loop:
+	djnz r7, delay_loop
+	djnz r6, delay_loop
+	djnz r5, delay_loop
+	ret
+
+
+.area DSEG (ABS)
+.org LEDLOC
+.db 0xde, 0xad, 0xbe, 0xef, 0xe4
