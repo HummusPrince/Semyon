@@ -1,6 +1,6 @@
 .module semyon
 
-LEDLEN = 5 - 1
+LEDLEN = 5
 LEDLOC = 0x300
 PCON = 0x97
 
@@ -13,16 +13,13 @@ _int_reset:
 .org 0x0090
 
 main:
-	mov r0, LEDLEN
-	mov DPH, LEDLOC >> 8
-	mov DPL, LEDLOC & 0xff
+	mov r0, #LEDLEN
+	mov DPH, #(LEDLOC >> 8)
+	mov DPL, #(LEDLOC & 0xff)
 main_loop:
-	mov r1, 0x04
+	mov r1, #0x04
 	mov a, r0
 	movc a, @a+DPTR
-	cjne a, 0xe4, cont
-	clr P3.2
-cont:
 	mov r2, a
 main_loop2:
 	;red = P3.5
@@ -30,21 +27,23 @@ main_loop2:
 	;green = P3.2
 	;blue = P3.3
 	mov a, r2
-	anl a, 0x03
+	;add a, 0x01
+	anl a, #0x03
 blue:
-	cjne a, 0x03, green
+	cjne a, #0x03, green
+	;clr P3.2
 	clr P3.3
 	acall delay
 	setb P3.3
 	sjmp read_next_led
 green:
-	cjne a, 0x02, yellow
+	cjne a, #0x02, yellow
 	clr P3.2
 	acall delay
 	setb P3.2
 	sjmp read_next_led
 yellow:
-	cjne a, 0x01, red
+	cjne a, #0x01, red
 	clr P3.4
 	acall delay
 	setb P3.4
@@ -55,21 +54,22 @@ red:
 	setb P3.5
 	
 read_next_led:
-	acall delay
+	;acall delay
 	mov a, r2
 	rr a
 	rr a
 	mov r2, a
+	;cpl P3.4
 	djnz r1, main_loop2
 	djnz r0, main_loop
 	sjmp main
 
 
 delay:
-	cpl P3.5
-	mov r5, 0x02
-	mov r6, 0x00
-	mov r7, 0x00
+	;cpl P3.5
+	mov r5, #0x18
+	mov r6, #0x00
+	mov r7, #0x00
 delay_loop:
 	djnz r7, delay_loop
 	djnz r6, delay_loop
@@ -78,5 +78,5 @@ delay_loop:
 
 
 .area DSEG (ABS)
-.org LEDLOC
-.db 0xde, 0xad, 0xbe, 0xef, 0xe4
+.org LEDLOC + 1
+.db 0xfc, 0x99, 0x33, 0x1b, 0xe4
