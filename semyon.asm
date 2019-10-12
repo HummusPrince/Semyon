@@ -1,8 +1,13 @@
 .module semyon
 
-LEDLEN = 5
+LEDLEN = 16
 LEDLOC = 0x300
 PCON = 0x97
+
+;Variables
+V_LED_CNT = 0x30
+V_LED_MAX = 0x31
+
 
 RLED = P3.5
 YLED = P3.4
@@ -18,30 +23,41 @@ _int_reset:
 .org 0x0090
 
 main:
-	mov r0, #LEDLEN
+	mov r4, #0
+	mov V_LED_MAX, #LEDLEN + 1
+	mov V_LED_CNT, #0
 main_loop:
-	mov r1, #0x04
-	mov a, r0
-	mov dptr, #LEDLOC
-	movc a, @a+dptr
-	mov r2, a
-main_loop2:
-	mov a, r2
-	anl a, #0x03
+	mov a, r4
+	cjne a, V_LED_CNT, display_led
+	mov r4, #0x00
+	inc V_LED_CNT
+wait_user:
+	jb RLED, wait_user
+	lcall delay
+	mov a, V_LED_MAX
+	cjne a, V_LED_CNT, display_led
+	mov V_LED_CNT, #1
+	
+display_led:
+	lcall get_led_val
+	inc r4
 	mov r3, a
 	lcall display_led_jumptable
-read_next_led:
-	mov a, r2
-	rr a
-	rr a
-	mov r2, a
-	djnz r1, main_loop2
-	djnz r0, main_loop
-	sjmp main
+	sjmp main_loop
 
+	
+	
+get_led_val:
+	mov dptr, #LEDLOC
+	mov a, r4
+	movc a, @a+dptr
+	ret
+	
+	
 display_led_jumptable:
 	mov dptr, #jumptable
 	mov a, r3
+	anl a, #0x03
 	rl a 	;YOU BASTARD!!!!!!!
 	jmp @a+dptr
 jumptable:
@@ -70,11 +86,11 @@ jumptable:
 		acall delay
 		setb BLED
 		ret
-
-
-
+		
+		
+		
 delay:
-	mov r5, #0x18
+	mov r5, #0x0C
 	mov r6, #0x00
 	mov r7, #0x00
 delay_loop:
@@ -85,5 +101,5 @@ delay_loop:
 
 
 .area DSEG (ABS)
-.org LEDLOC + 1
-.db 0xfc, 0x99, 0x33, 0x1b, 0xe4
+.org LEDLOC
+.db 0x00, 0x01, 0x03, 0x02, 0x00, 0x01, 0x03, 0x02, 0x00, 0x03, 0x01, 0x02, 0x00, 0x03, 0x01, 0x02
