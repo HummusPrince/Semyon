@@ -1,8 +1,15 @@
 .module semyon
 
-LEDLEN = 16
-LEDLOC = 0x300
+;SFRs
 PCON = 0x97
+
+;Parameters
+P_LEDLEN = 16
+P_LEDLOC = 0x300
+P_LFSRMASK_L = 0x11
+P_LFSRMASK_H = 0xa0
+P_SEED_L = 0xff
+P_SEED_H = 0xff
 
 ;Variables
 V_LED_CNT = 0x30
@@ -24,33 +31,46 @@ _int_reset:
 
 main:
 	mov r4, #0
-	mov V_LED_MAX, #LEDLEN + 1
-	mov V_LED_CNT, #0
+	mov r0, #P_SEED_L
+	mov r1, #P_SEED_H
+	;mov V_LED_CNT, #0
 main_loop:
-	mov a, r4
-	cjne a, V_LED_CNT, display_led
-	mov r4, #0x00
-	inc V_LED_CNT
-wait_user:
-	jb RLED, wait_user
-	lcall delay
-	mov a, V_LED_MAX
-	cjne a, V_LED_CNT, display_led
-	mov V_LED_CNT, #1
-	
-display_led:
-	lcall get_led_val
-	inc r4
-	mov r3, a
+	lcall get_led_color
 	lcall display_led_jumptable
 	sjmp main_loop
 
 	
+get_led_color:
+	mov r3, #0
+	lcall inc_lfsr
+	jnc get_led_color_2
+	inc r3
+	inc r3
+get_led_color_2: 
+	lcall inc_lfsr
+	jnc get_led_color_ret
+	inc r3
+get_led_color_ret:
+	ret
 	
-get_led_val:
-	mov dptr, #LEDLOC
-	mov a, r4
-	movc a, @a+dptr
+	
+inc_lfsr:
+	;Now with Galois LFSR of 16 bits with polynomial x^16 + x^15 + x^13 + x^4 + 1 (mask 0xa011)
+	clr c
+	mov a, r0
+	rlc a
+	mov r0, a
+	mov a, r1
+	rlc a
+	mov r1, a
+	jnc inc_lfsr_ret
+	mov a, r0
+	xrl a, #P_LFSRMASK_L
+	mov r0, a
+	mov a, r1
+	xrl a, #P_LFSRMASK_H
+	mov r1, a
+inc_lfsr_ret:	
 	ret
 	
 	
@@ -90,7 +110,7 @@ jumptable:
 		
 		
 delay:
-	mov r5, #0x0C
+	mov r5, #0x10
 	mov r6, #0x00
 	mov r7, #0x00
 delay_loop:
@@ -100,6 +120,6 @@ delay_loop:
 	ret
 
 
-.area DSEG (ABS)
-.org LEDLOC
-.db 0x00, 0x01, 0x03, 0x02, 0x00, 0x01, 0x03, 0x02, 0x00, 0x03, 0x01, 0x02, 0x00, 0x03, 0x01, 0x02
+;.area DSEG (ABS)
+;.org P_LEDLOC
+;.db 0x00, 0x01, 0x03, 0x02, 0x00, 0x01, 0x03, 0x02, 0x00, 0x03, 0x01, 0x02, 0x00, 0x03, 0x01, 0x02
