@@ -3,33 +3,36 @@
 ;SFRs
 PCON = 0x97
 
-;Parameters
+;Parameter values
 ;P_LEDLEN = 16
 ;P_LEDLOC = 0x300
 P_LFSRMASK_L = 0x11
 P_LFSRMASK_H = 0xa0
-P_SEED_L = 0xff
-P_SEED_H = 0xff
+;P_SEED_L = 0xff
+;P_SEED_H = 0xff
 
-;States
+;State values
 S_INITIALIZE = 0x00
 S_DISPLAY_SEQUENCE = 0x01
 S_GET_USER_INPUT = 0x02
 S_GAME_OVER = 0x03
-
 S_INVALID = 0xff
 
-;Variables
+;Variable addresses
 V_LED_CNT = 0x30
 V_LED_MAX = 0x31
 V_STATE = 0x40
+V_SEED_L = 0x20
+V_SEED_H = 0x21
 
-
+;Bool variables bit-addresses
 RLED = P3.5
 YLED = P3.4
 GLED = P3.2
 BLED = P3.3
 
+
+;Code
 .area INTV (ABS)
 .org 0x0000
 _int_reset:
@@ -69,12 +72,32 @@ initialize:
 	;It should also generate the seed value for PRNG.
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
+	mov V_SEED_L, #0xff
+	mov V_SEED_H, #0xff
+	
+
+	mov r0, V_SEED_L
+	mov r1, V_SEED_H
+	initialize_seed_loop:
+		jnb RLED, initialize_ret
+		jnb YLED, initialize_ret
+		jnb GLED, initialize_ret
+		jnb BLED, initialize_ret
+		lcall inc_lfsr
+		sjmp initialize_seed_loop
+		
+	initialize_ret:
+	mov V_SEED_L, r0
+	mov V_SEED_H, r1
+	lcall delay_display
 	mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
 
+		
+		
 display_sequence:
-	mov r0, #P_SEED_L
-	mov r1, #P_SEED_H
+	mov r0, V_SEED_L
+	mov r1, V_SEED_H
 	mov a, V_LED_MAX
 	mov V_LED_CNT, a
 	
@@ -86,11 +109,14 @@ display_sequence:
 	mov V_STATE, #S_GET_USER_INPUT
 	ret
 
+	
+	
 get_user_input:
-	mov r0, #P_SEED_L
-	mov r1, #P_SEED_H
+	mov r0, V_SEED_L
+	mov r1, V_SEED_H
 	mov a, V_LED_MAX
 	mov V_LED_CNT, a
+	
 	get_user_input_loop1:
 		lcall get_led_color
 		lcall poll_user_input_debounce
@@ -104,7 +130,9 @@ get_user_input:
 	get_user_input_game_over:
 		mov V_STATE, #S_GAME_OVER
 		ret
-		
+	
+
+	
 game_over:
 	lcall delay_display
 	clr RLED
