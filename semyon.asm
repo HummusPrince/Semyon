@@ -1,15 +1,19 @@
 .module semyon
 
 ;SFRs
-PCON = 0x97
+PCON2 = 0x97
 
 ;Parameter values
-;P_LEDLEN = 16
-;P_LEDLOC = 0x300
+P_LEDLOC = 0x400
+
 P_LFSRMASK_L = 0x11
 P_LFSRMASK_H = 0xa0
-;P_SEED_L = 0xff
-;P_SEED_H = 0xff
+
+P_LED_ALL = ~0x3c
+P_LED_R = 0x20
+P_LED_Y = 0x10
+P_LED_G = 0x04
+P_LED_B = 0x08
 
 ;State values
 S_INITIALIZE = 0x00
@@ -72,27 +76,29 @@ initialize:
 	;It should also generate the seed value for PRNG.
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
-	mov V_SEED_L, #0xff
-	mov V_SEED_H, #0xff
 	
-
-	mov r0, V_SEED_L
-	mov r1, V_SEED_H
 	initialize_seed_loop:
-		jnb RLED, initialize_ret
-		jnb YLED, initialize_ret
-		jnb GLED, initialize_ret
-		jnb BLED, initialize_ret
-		lcall inc_lfsr
+		mov a, P3
+		orl a, #P_LED_ALL
+		cjne a, #0xff, initialize_ret
+		;This is a fast and easy way to increment the seed.
+		inc r0
+		cjne r0, #0x00, initialize_seed_loop
+		inc r1
 		sjmp initialize_seed_loop
 		
 	initialize_ret:
+		mov a, P3
+		orl a, #P_LED_ALL
+		cpl a
+		cjne a, #0x00, initialize_ret
+	
 	mov V_SEED_L, r0
 	mov V_SEED_H, r1
 	lcall delay_display
 	mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
-
+		
 		
 		
 display_sequence:
@@ -119,7 +125,7 @@ get_user_input:
 	
 	get_user_input_loop1:
 		lcall get_led_color
-		lcall poll_user_input_debounce
+		lcall poll_user_input
 		xrl a, r3
 		jnz get_user_input_game_over
 		djnz V_LED_CNT, get_user_input_loop1
@@ -135,55 +141,44 @@ get_user_input:
 	
 game_over:
 	lcall delay_display
-	clr RLED
-	clr YLED
-	clr GLED
-	clr BLED
+	mov a, P3
+	anl a, #P_LED_ALL
+	mov P3, a
 	lcall delay_display
-	setb RLED
-	setb YLED
-	setb GLED
-	setb BLED
-	lcall delay_display
+	mov a, P3
+	orl a, #~P_LED_ALL	;#~P_LED_ALL is refered to as iram rather than immediate.
+	mov P3, a
 	lcall delay_display
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE
 	ret
 
 	
-poll_user_input_debounce:
-	jnb RLED, poll_user_input_debounce_r
-	jnb YLED, poll_user_input_debounce_y
-	jnb GLED, poll_user_input_debounce_g
-	jnb BLED, poll_user_input_debounce_b
-	sjmp poll_user_input_debounce
-	poll_user_input_debounce_r:
-		lcall delay_debounce
-		jb RLED, poll_user_input_debounce
-		mov a, #0x00
-		sjmp poll_user_input_debounce_delay
-	poll_user_input_debounce_y:
-		lcall delay_debounce
-		jb YLED, poll_user_input_debounce
-		mov a, #0x01
-		sjmp poll_user_input_debounce_delay
-	poll_user_input_debounce_g:
-		lcall delay_debounce
-		jb GLED, poll_user_input_debounce
-		mov a, #0x02
-		sjmp poll_user_input_debounce_delay
-	poll_user_input_debounce_b:
-		lcall delay_debounce
-		jb BLED, poll_user_input_debounce
-		mov a, #0x03
-		;sjmp poll_user_input_debounce_delay
-		
-	poll_user_input_debounce_delay:
+poll_user_input:
+		mov a, P3
+		orl a, #P_LED_ALL
+		cpl a
+		jz poll_user_input
 	lcall delay_debounce
-	jnb RLED, poll_user_input_debounce_delay
-	jnb YLED, poll_user_input_debounce_delay
-	jnb GLED, poll_user_input_debounce_delay
-	jnb BLED, poll_user_input_debounce_delay
+	
+	clr a
+	jnb RLED, poll_user_input_2
+	inc a
+	jnb YLED, poll_user_input_2
+	inc a
+	jnb GLED, poll_user_input_2
+	inc a
+	jnb BLED, poll_user_input_2
+	sjmp poll_user_input
+	
+	poll_user_input_2:
+	mov r4, a
+	poll_user_input_3:
+		mov a, P3
+		orl a, #P_LED_ALL
+		cjne a, #0xff, poll_user_input_3
+	lcall delay_debounce
+	mov a, r4
 	ret
 
 
@@ -212,53 +207,26 @@ inc_lfsr:
 	rlc a
 	mov r1, a
 	jnc inc_lfsr_ret
-	mov a, r0
-	xrl a, #P_LFSRMASK_L
-	mov r0, a
-	mov a, r1
-	xrl a, #P_LFSRMASK_H
-	mov r1, a
+	xrl 0x00, #P_LFSRMASK_L
+	xrl 0x01, #P_LFSRMASK_H
 inc_lfsr_ret:	
 	ret
 	
 	
 display_led:
-	mov dptr, #led_jumptable
+	mov dptr, #P_LEDLOC
 	mov a, r3
 	anl a, #0x03
-	rl a 	;YOU BASTARD!!!!!!!
-	jmp @a+dptr
-led_jumptable:
-	sjmp light_rled
-	sjmp light_yled
-	sjmp light_gled
-	sjmp light_bled
+	movc a, @a+dptr
+	xrl a, P3
+	mov P3, a
+	lcall delay_display
+	mov a, P3
+	orl a, #~P_LED_ALL
+	mov P3, a
+	lcall delay_display2
+	ret
 	
-	light_rled:
-		clr RLED
-		lcall delay_display
-		setb RLED
-		lcall delay_display2
-		ret
-	light_yled:
-		clr YLED
-		lcall delay_display
-		setb YLED
-		lcall delay_display2
-		ret
-	light_gled:
-		clr GLED
-		lcall delay_display
-		setb GLED
-		lcall delay_display2
-		ret
-	light_bled:
-		clr BLED
-		lcall delay_display
-		setb BLED
-		lcall delay_display2
-		ret
-
 delay_debounce:
 	mov r5, #0x01
 	mov r6, #0x00
@@ -284,6 +252,7 @@ delay_loop:
 	ret
 
 
-;.area DSEG (ABS)
-;.org P_LEDLOC
-;.db 0x00, 0x01, 0x03, 0x02, 0x00, 0x01, 0x03, 0x02, 0x00, 0x03, 0x01, 0x02, 0x00, 0x03, 0x01, 0x02
+.area DSEG (ABS)
+.org P_LEDLOC
+
+.db P_LED_R, P_LED_Y, P_LED_G, P_LED_B
