@@ -154,6 +154,7 @@ game_over:
 	ret
 
 	
+	
 poll_user_input:
 		mov a, P3
 		orl a, #P_LED_ALL
@@ -181,6 +182,7 @@ poll_user_input:
 	mov a, r4
 	ret
 
+	
 
 get_led_color:
 	;Puts in r3 the value of the next LED to display.
@@ -195,6 +197,7 @@ get_led_color_2:
 	inc r3
 get_led_color_ret:
 	ret
+	
 	
 	
 inc_lfsr:
@@ -213,6 +216,7 @@ inc_lfsr_ret:
 	ret
 	
 	
+	
 display_led:
 	mov dptr, #P_LEDLOC
 	mov a, r3
@@ -227,30 +231,33 @@ display_led:
 	lcall delay_display2
 	ret
 	
+	
+	
 delay_debounce:
-	mov r5, #0x01
-	mov r6, #0x00
-	mov r7, #0x00
+	mov r7, #0x01
 	sjmp delay_loop		
 
 delay_display2:
-	mov r5, #0x04
-	mov r6, #0x00
-	mov r7, #0x00
+	mov r7, #0x05
 	sjmp delay_loop
 
 delay_display:
-	mov r5, #0x10
-	mov r6, #0x00
-	mov r7, #0x00
-	sjmp delay_loop
+	mov r7, #0x16
+	;sjmp delay_loop
 	
 delay_loop:
-	djnz r7, delay_loop
-	djnz r6, delay_loop
-	djnz r5, delay_loop
+	;mov TMOD, #0x01
+	mov TL0, #0x00
+	mov TH0, #0xc0
+	delay_loop_2:
+		setb TR0
+		jnb TF0, .
+		clr TF0
+		djnz r7, delay_loop_2
+	clr TR0
 	ret
 
+	
 
 .area DSEG (ABS)
 .org P_LEDLOC
