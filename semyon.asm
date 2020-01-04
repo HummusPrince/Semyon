@@ -2,6 +2,7 @@
 
 ;SFRs
 PCON2 = 0x97
+AUXR = 0x8e
 
 ;Parameter values
 P_LEDLOC = 0x400
@@ -76,15 +77,16 @@ initialize:
 	;It should also generate the seed value for PRNG.
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
+	mov TL0, #0x01
+	mov TH0, #0x00
+	mov TMOD, #0x00
+	mov AUXR, #0x81
+	setb TR0
 	
 	initialize_seed_loop:
 		mov a, P3
 		orl a, #P_LED_ALL
 		cjne a, #0xff, initialize_ret
-		;This is a fast and easy way to increment the seed.
-		inc r0
-		cjne r0, #0x00, initialize_seed_loop
-		inc r1
 		sjmp initialize_seed_loop
 		
 	initialize_ret:
@@ -93,8 +95,10 @@ initialize:
 		cpl a
 		cjne a, #0x00, initialize_ret
 	
-	mov V_SEED_L, r0
-	mov V_SEED_H, r1
+	clr TR0
+	clr TF0
+	mov V_SEED_L, TL0
+	mov V_SEED_H, TH0		
 	lcall delay_display
 	mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
@@ -247,6 +251,7 @@ delay_display:
 	
 delay_loop:
 	;mov TMOD, #0x01
+	mov AUXR, #0x01
 	mov TL0, #0x00
 	mov TH0, #0xc0
 	delay_loop_2:
