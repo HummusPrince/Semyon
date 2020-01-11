@@ -3,6 +3,8 @@
 ;SFRs
 PCON2 = 0x97
 AUXR = 0x8e
+AUXR2 = 0x8f
+IE2 = 0xaf
 
 ;Parameter values
 P_LEDLOC = 0x400
@@ -15,6 +17,11 @@ P_LED_R = 0x20
 P_LED_Y = 0x10
 P_LED_G = 0x04
 P_LED_B = 0x08
+
+P_N_LED_R = 0x00
+P_N_LED_Y = 0x01
+P_N_LED_G = 0x02
+P_N_LED_B = 0x03
 
 ;State values
 S_INITIALIZE = 0x00
@@ -31,10 +38,12 @@ V_SEED_L = 0x20
 V_SEED_H = 0x21
 
 ;Bool variables bit-addresses
-RLED = P3.5
-YLED = P3.4
-GLED = P3.2
-BLED = P3.3
+RLED = P3.5		;INT3
+YLED = P3.4 	;INT2
+GLED = P3.2 	;INT0
+BLED = P3.3		;INT1
+
+B_BUTTON_FLAG = 0x40
 
 
 ;Code
@@ -42,6 +51,31 @@ BLED = P3.3
 .org 0x0000
 _int_reset:
 	ljmp main
+
+
+.org 0x0003 	;ext0
+_int_GLED:
+	mov a, P_N_LED_G
+	ljmp ext_interrupt_handler
+
+
+.org 0x0013 	;ext1
+_int_BLED:
+	mov a, P_LED_B
+	ljmp ext_interrupt_handler
+
+
+.org 0x0053 	;ext2
+_int_YLED:
+	mov a, P_LED_Y
+	ljmp ext_interrupt_handler
+
+
+.org 0x005b 	;ext3
+_int_RLED:
+	mov a, P_LED_R
+	ljmp ext_interrupt_handler
+	
 	
 .area CSEG (ABS, CON)
 .org 0x0090
@@ -81,15 +115,17 @@ initialize:
 	mov TH0, #0x00
 	mov TMOD, #0x00
 	mov AUXR, #0x81
-	setb TR0
+	mov IE, #0x05	;EX1 | EX0
+	mov AUXR2, #0x30	;EX3 | EX2
+	mov TCON, #0x05
 	
-	initialize_seed_loop:
-		mov a, P3
-		orl a, #P_LED_ALL
-		cjne a, #0xff, initialize_ret
-		sjmp initialize_seed_loop
-		
-	initialize_ret:
+	setb EA
+	setb TR0
+	setb B_BUTTON_FLAG
+	jb B_BUTTON_FLAG, .
+	clr EA
+	
+	initialize_ret:	
 		mov a, P3
 		orl a, #P_LED_ALL
 		cpl a
@@ -262,7 +298,13 @@ delay_loop:
 	clr TR0
 	ret
 
+
 	
+ext_interrupt_handler:
+	clr B_BUTTON_FLAG
+	anl AUXR2, #~0x30	;EX3 | EX2
+	anl IE, #~0x05	;EX1 | EX0
+	reti
 
 .area DSEG (ABS)
 .org P_LEDLOC
