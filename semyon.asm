@@ -12,7 +12,7 @@ P_LEDLOC = 0x400
 P_LFSRMASK_L = 0x11
 P_LFSRMASK_H = 0xa0
 
-P_LED_ALL = ~0x3c
+P_LED_ALL = ~0x3c 	;11000011
 P_LED_R = 0x20
 P_LED_Y = 0x10
 P_LED_G = 0x04
@@ -36,6 +36,7 @@ V_LED_MAX = 0x31
 V_STATE = 0x40
 V_SEED_L = 0x20
 V_SEED_H = 0x21
+V_INTERRUPT_LED = 0x32
 
 ;Bool variables bit-addresses
 RLED = P3.5		;INT3
@@ -55,25 +56,25 @@ _int_reset:
 
 .org 0x0003 	;ext0
 _int_GLED:
-	mov a, P_N_LED_G
+	mov V_INTERRUPT_LED, #P_N_LED_G
 	ljmp ext_interrupt_handler
 
 
 .org 0x0013 	;ext1
 _int_BLED:
-	mov a, P_LED_B
+	mov V_INTERRUPT_LED, #P_N_LED_B
 	ljmp ext_interrupt_handler
 
 
 .org 0x0053 	;ext2
 _int_YLED:
-	mov a, P_LED_Y
+	mov V_INTERRUPT_LED, #P_N_LED_Y
 	ljmp ext_interrupt_handler
 
 
 .org 0x005b 	;ext3
 _int_RLED:
-	mov a, P_LED_R
+	mov V_INTERRUPT_LED, #P_N_LED_R
 	ljmp ext_interrupt_handler
 	
 	
@@ -115,21 +116,35 @@ initialize:
 	mov TH0, #0x00
 	mov TMOD, #0x00
 	mov AUXR, #0x81
-	mov IE, #0x05	;EX1 | EX0
-	mov AUXR2, #0x30	;EX3 | EX2
 	mov TCON, #0x05
-	
-	setb EA
 	setb TR0
-	setb B_BUTTON_FLAG
-	jb B_BUTTON_FLAG, .
-	clr EA
 	
-	initialize_ret:	
+	initialize_debounce:
+		mov IE, #0x05	;EX1 | EX0
+		mov AUXR2, #0x30	;EX3 | EX2
+		setb EA
+		orl PCON, #0x01 	;IDL
+		clr EA
+	
+		mov dptr, #P_LEDLOC
+		mov a, V_INTERRUPT_LED
+		anl a, #0x03
+		movc a, @a+dptr
+		
+		lcall delay_debounce
+		
+		xrl a, P3
+		orl a, #P_LED_ALL
+		cpl a
+		
+		jnz initialize_debounce
+		
+	initialize_release:
+		lcall delay_debounce
 		mov a, P3
 		orl a, #P_LED_ALL
 		cpl a
-		cjne a, #0x00, initialize_ret
+		jnz initialize_release
 	
 	clr TR0
 	clr TF0
@@ -188,7 +203,6 @@ game_over:
 	mov a, P3
 	orl a, #~P_LED_ALL	;#~P_LED_ALL is refered to as iram rather than immediate.
 	mov P3, a
-	lcall delay_display
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE
 	ret
@@ -301,10 +315,11 @@ delay_loop:
 
 	
 ext_interrupt_handler:
-	clr B_BUTTON_FLAG
 	anl AUXR2, #~0x30	;EX3 | EX2
 	anl IE, #~0x05	;EX1 | EX0
 	reti
+	
+	
 
 .area DSEG (ABS)
 .org P_LEDLOC
