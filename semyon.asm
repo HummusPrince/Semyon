@@ -1,10 +1,13 @@
 .module semyon
+;IRC freq = 11.0592MHz
 
 ;SFRs
 PCON2 = 0x97
 AUXR = 0x8e
 AUXR2 = 0x8f
 IE2 = 0xaf
+T2L = 0xd7 	;non standard T2 timer, doh!
+T2H = 0xd6
 
 ;Parameter values
 P_LEDLOC = 0x400
@@ -77,6 +80,10 @@ _int_RLED:
 	mov V_INTERRUPT_LED, #P_N_LED_R
 	ljmp ext_interrupt_handler
 	
+
+.org 0x0063 	;T2
+_int_T2:
+	ljmp t2_interrupt_handler
 	
 .area CSEG (ABS, CON)
 .org 0x0090
@@ -115,7 +122,7 @@ initialize:
 	mov TL0, #0x01
 	mov TH0, #0x00
 	mov TMOD, #0x00
-	mov AUXR, #0x81
+	mov AUXR, #0x80
 	mov TCON, #0x05
 	setb TR0
 	
@@ -288,28 +295,32 @@ display_led:
 	
 	
 delay_debounce:
-	mov r7, #0x01
-	sjmp delay_loop		
+	mov T2L, #0x00
+	mov T2H, #0xf8
+	sjmp delay_activate	
 
 delay_display2:
-	mov r7, #0x05
-	sjmp delay_loop
+	mov T2L, #0x00
+	mov T2H, #0xe0
+	sjmp delay_activate
 
 delay_display:
-	mov r7, #0x16
-	;sjmp delay_loop
+	mov T2L, #0x00
+	mov T2H, #0xb0
+	;sjmp delay_activate
 	
-delay_loop:
-	;mov TMOD, #0x01
-	mov AUXR, #0x01
-	mov TL0, #0x00
-	mov TH0, #0xc0
-	delay_loop_2:
-		setb TR0
-		jnb TF0, .
-		clr TF0
-		djnz r7, delay_loop_2
-	clr TR0
+delay_activate:
+	orl IE2, #0x04		;Enable T2 interrupt
+	orl AUXR, #0x04		;T2 is 1clk
+	orl PCON2, #0x07 	;clk/128
+	setb EA
+	
+	orl AUXR, #0x10 	;enable T2
+	orl PCON, #0x01 	;IDL
+	anl AUXR, #~0x10 	;disable T2
+	
+	clr EA
+	anl PCON2, #~0x07 	;clk/1
 	ret
 
 
@@ -320,7 +331,12 @@ ext_interrupt_handler:
 	reti
 	
 	
-
+	
+t2_interrupt_handler:
+	anl IE2, #~0x04
+	reti
+	
+	
 .area DSEG (ABS)
 .org P_LEDLOC
 
