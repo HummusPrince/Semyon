@@ -49,6 +49,39 @@ BLED = P3.3		;INT1
 
 B_BUTTON_FLAG = 0x40
 
+;.area MAC (REL)
+;Macros
+.macro ext_int_get_input, pd_flag, ?rand
+ext_int_get_input_beginning'rand: 
+	mov IE, #0x05	;EX1 | EX0
+	mov AUXR2, #0x30	;EX3 | EX2
+	setb EA
+	.if pd_flag = 1
+		orl PCON, #0x02 	;PD = power down
+	.else
+		orl PCON, #0x01 	;IDL
+	.endif
+	clr EA
+	mov dptr, #P_LEDLOC
+	mov a, V_INTERRUPT_LED
+	anl a, #0x03
+	movc a, @a+dptr
+	
+	lcall delay_debounce
+	
+	xrl a, P3
+	orl a, #P_LED_ALL
+	cpl a
+	
+	jnz ext_int_get_input_beginning'rand
+	
+	ext_int_get_input_release'rand:
+		lcall delay_debounce
+		mov a, P3
+		orl a, #P_LED_ALL
+		cpl a
+		jnz ext_int_get_input_release'rand
+.endm
 
 ;Code
 .area INTV (ABS)
@@ -84,6 +117,8 @@ _int_RLED:
 .org 0x0063 	;T2
 _int_T2:
 	ljmp t2_interrupt_handler
+	
+	
 	
 .area CSEG (ABS, CON)
 .org 0x0090
@@ -126,32 +161,7 @@ initialize:
 	mov TCON, #0x05
 	setb TR0
 	
-	initialize_debounce:
-		mov IE, #0x05	;EX1 | EX0
-		mov AUXR2, #0x30	;EX3 | EX2
-		setb EA
-		orl PCON, #0x01 	;IDL
-		clr EA
-	
-		mov dptr, #P_LEDLOC
-		mov a, V_INTERRUPT_LED
-		anl a, #0x03
-		movc a, @a+dptr
-		
-		lcall delay_debounce
-		
-		xrl a, P3
-		orl a, #P_LED_ALL
-		cpl a
-		
-		jnz initialize_debounce
-		
-	initialize_release:
-		lcall delay_debounce
-		mov a, P3
-		orl a, #P_LED_ALL
-		cpl a
-		jnz initialize_release
+	ext_int_get_input, 0		;macro call - idle mode
 	
 	clr TR0
 	clr TF0
@@ -187,7 +197,8 @@ get_user_input:
 	
 	get_user_input_loop1:
 		lcall get_led_color
-		lcall poll_user_input
+		ext_int_get_input, 1		;macro call - power down mode
+		mov a, V_INTERRUPT_LED
 		xrl a, r3
 		jnz get_user_input_game_over
 		djnz V_LED_CNT, get_user_input_loop1
@@ -212,35 +223,6 @@ game_over:
 	mov P3, a
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE
-	ret
-
-	
-	
-poll_user_input:
-		mov a, P3
-		orl a, #P_LED_ALL
-		cpl a
-		jz poll_user_input
-	lcall delay_debounce
-	
-	clr a
-	jnb RLED, poll_user_input_2
-	inc a
-	jnb YLED, poll_user_input_2
-	inc a
-	jnb GLED, poll_user_input_2
-	inc a
-	jnb BLED, poll_user_input_2
-	sjmp poll_user_input
-	
-	poll_user_input_2:
-	mov r4, a
-	poll_user_input_3:
-		mov a, P3
-		orl a, #P_LED_ALL
-		cjne a, #0xff, poll_user_input_3
-	lcall delay_debounce
-	mov a, r4
 	ret
 
 	
@@ -271,7 +253,7 @@ inc_lfsr:
 	rlc a
 	mov r1, a
 	jnc inc_lfsr_ret
-	xrl 0x00, #P_LFSRMASK_L
+	xrl 0x00, #P_LFSRMASK_L 	;using absolute addresses of r0 and r1
 	xrl 0x01, #P_LFSRMASK_H
 inc_lfsr_ret:	
 	ret
@@ -284,7 +266,7 @@ display_led:
 	anl a, #0x03
 	movc a, @a+dptr
 	xrl a, P3
-	mov P3, a
+	mov P3, a	
 	lcall delay_display
 	mov a, P3
 	orl a, #~P_LED_ALL
@@ -296,7 +278,7 @@ display_led:
 	
 delay_debounce:
 	mov T2L, #0x00
-	mov T2H, #0xf8
+	mov T2H, #0xfc
 	sjmp delay_activate	
 
 delay_display2:
