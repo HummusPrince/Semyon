@@ -1,0 +1,52 @@
+;Defenitions for Semyon
+
+;IRC freq == 11.0592MHz
+
+
+;SFRs
+PCON2 == 0x97
+AUXR == 0x8e
+AUXR2 == 0x8f
+IE2 == 0xaf
+T2L == 0xd7 	;non standard T2 timer, doh!
+T2H == 0xd6
+
+
+;Parameter values
+P_LFSRMASK_L == 0x11
+P_LFSRMASK_H == 0xa0
+
+P_LED_ALL == ~0x3c 	;11000011
+P_LED_R == 0x20
+P_LED_Y == 0x10
+P_LED_G == 0x04
+P_LED_B == 0x08
+
+P_N_LED_R == 0x00
+P_N_LED_Y == 0x01
+P_N_LED_G == 0x02
+P_N_LED_B == 0x03
+
+
+;State values
+S_INITIALIZE == 0x00
+S_DISPLAY_SEQUENCE == 0x01
+S_GET_USER_INPUT == 0x02
+S_GAME_OVER == 0x03
+S_INVALID == 0xff
+
+
+;Variable addresses
+V_LED_CNT == 0x30
+V_LED_MAX == 0x31
+V_STATE == 0x40
+V_SEED_L == 0x20
+V_SEED_H == 0x21
+V_INTERRUPT_LED == 0x32
+
+
+;Bool variables bit-addresses
+RLED == P3.5		;INT3
+YLED == P3.4 	;INT2
+GLED == P3.2 	;INT0
+BLED == P3.3		;INT1
