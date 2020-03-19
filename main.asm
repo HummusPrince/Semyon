@@ -31,6 +31,7 @@ main:
 initialize:
 	;This is the initialization phase of semyon.
 	;It should also generate the seed value for PRNG.
+	
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
 	mov TL0, #0x01 
