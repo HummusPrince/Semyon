@@ -11,3 +11,4 @@
 .include "dseg.asm"
 .include "io.asm"
 .include "delay.asm"
+.include "pwm.asm"

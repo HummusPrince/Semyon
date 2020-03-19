@@ -1,17 +1,60 @@
 ;Macros
 
+;interrupts
+.macro interrupt_enable
+	setb EA
+.endm
+
+.macro interrupt_disable
+	clr EA
+.endm
+
+;ext_int
+.macro ext_int_enable
+	orl IE, #0x05	;EX1 | EX0
+	orl AUXR2, #0x30	;EX3 | EX2
+.endm
+
+.macro ext_int_disable
+	anl AUXR2, #~0x30	;EX3 | EX2
+	anl IE, #~0x05	;EX1 | EX0
+.endm
+
+;t0_int
+.macro t0_int_enable
+	setb ET0
+.endm
+
+.macro t0_int_disable
+	clr ET0
+.endm
+
+;t2_int
+.macro t2_int_enable
+	orl IE2, #0x04
+.endm
+
+.macro t2_int_disable
+	anl IE2, #~0x04
+.endm
+
+.macro t2_set_count, count
+	mov T2L, #(0x10000-count)&0xff
+	mov T2H, #((0x10000-count)>>8)&0xff
+.endm
+
+
 .macro ext_int_get_input, pd_flag, ?rand
 ext_int_get_input_beginning'rand: 
-	mov IE, #0x05	;EX1 | EX0
-	mov AUXR2, #0x30	;EX3 | EX2
-	setb EA
+	ext_int_enable
+	interrupt_enable
 	.if pd_flag = 1
 		orl PCON, #0x02 	;PD = power down
 	.else
 		orl PCON, #0x01 	;IDL
 	.endif
-	clr EA
-	mov dptr, #P_LEDLOC
+	interrupt_disable
+	mov dptr, #D_LEDLOC
 	mov a, V_INTERRUPT_LED
 	anl a, #0x03
 	movc a, @a+dptr

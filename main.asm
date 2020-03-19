@@ -33,9 +33,9 @@ initialize:
 	;It should also generate the seed value for PRNG.
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
-	mov TL0, #0x01
+	mov TL0, #0x01 
 	mov TH0, #0x00
-	mov TMOD, #0x00
+	mov TMOD, #0x00 
 	mov AUXR, #0x80
 	mov TCON, #0x05
 	setb TR0

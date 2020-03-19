@@ -3,10 +3,9 @@
 .area CODE
 
 ext_interrupt_handler:
-	anl AUXR2, #~0x30	;EX3 | EX2
-	anl IE, #~0x05	;EX1 | EX0
+	ext_int_disable
 	reti
 	
 t2_interrupt_handler:
-	anl IE2, #~0x04
+	t2_int_disable
 	reti

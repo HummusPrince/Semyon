@@ -33,7 +33,7 @@ inc_lfsr_ret:
 	
 	
 display_led:
-	mov dptr, #P_LEDLOC
+	mov dptr, #D_LEDLOC
 	mov a, r3
 	anl a, #0x03
 	movc a, @a+dptr

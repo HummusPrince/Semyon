@@ -27,9 +27,16 @@ _int_YLED:
 .org 0x005b 	;ext3
 _int_RLED:
 	mov V_INTERRUPT_LED, #P_N_LED_R
-	ljmp ext_interrupt_handler
-	
+	ljmp ext_interrupt_handler	
 
+	
+	
+	
+.org 0x000b 	;T0
+_int_T0:
+	reti
+
+	
 .org 0x0063 	;T2
 _int_T2:
 	ljmp t2_interrupt_handler
