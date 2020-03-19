@@ -43,6 +43,7 @@ V_STATE == 0x40
 V_SEED_L == 0x20
 V_SEED_H == 0x21
 V_INTERRUPT_LED == 0x32
+V_PWM_LED == 0x33
 
 
 ;Bool variables bit-addresses

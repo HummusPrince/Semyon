@@ -29,6 +29,12 @@
 	clr ET0
 .endm
 
+.macro t0_set_count, count
+	mov TL0, #(0x10000-count)&0xff
+	mov TH0, #((0x10000-count)>>8)&0xff
+.endm
+
+
 ;t2_int
 .macro t2_int_enable
 	orl IE2, #0x04
@@ -58,6 +64,7 @@ ext_int_get_input_beginning'rand:
 	mov a, V_INTERRUPT_LED
 	anl a, #0x03
 	movc a, @a+dptr
+	mov V_PWM_LED, a
 	
 	lcall delay_debounce
 	
@@ -73,4 +80,5 @@ ext_int_get_input_beginning'rand:
 		orl a, #P_LED_ALL
 		cpl a
 		jnz ext_int_get_input_release'rand
+	lcall pwm_led
 .endm

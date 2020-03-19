@@ -8,7 +8,7 @@ get_led_color:
 	jnc get_led_color_2
 	inc r3
 	inc r3
-get_led_color_2: 
+get_led_color_2:
 	lcall inc_lfsr
 	jnc get_led_color_ret
 	inc r3
@@ -28,7 +28,7 @@ inc_lfsr:
 	jnc inc_lfsr_ret
 	xrl 0x00, #P_LFSRMASK_L 	;using absolute addresses of r0 and r1
 	xrl 0x01, #P_LFSRMASK_H
-inc_lfsr_ret:	
+inc_lfsr_ret:
 	ret
 	
 	
@@ -37,11 +37,8 @@ display_led:
 	mov a, r3
 	anl a, #0x03
 	movc a, @a+dptr
-	xrl a, P3
-	mov P3, a	
+	mov V_PWM_LED, a
+	xrl P3, a
 	lcall delay_display
-	mov a, P3
-	orl a, #~P_LED_ALL
-	mov P3, a
-	lcall delay_display2
+	lcall pwm_led
 	ret

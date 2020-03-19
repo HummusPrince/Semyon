@@ -34,24 +34,20 @@ initialize:
 	
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
-	mov TL0, #0x01 
-	mov TH0, #0x00
-	mov TMOD, #0x00 
-	mov AUXR, #0x80
-	mov TCON, #0x05
-	setb TR0
+	mov T2L, #0x01
+	mov T2H, #0x00
+	orl AUXR, #0x14		;T2 enable || T2 is 1clk
 	
-	ext_int_get_input, 0		;macro call - idle mode
+	ext_int_get_input, 0	;macro call - idle mode
 	
-	clr TR0
-	clr TF0
-	mov V_SEED_L, TL0
-	mov V_SEED_H, TH0		
+	anl AUXR, #~0x10	;T2 disable
+	mov V_SEED_L, T2L
+	mov V_SEED_H, T2H
 	lcall delay_display
 	mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
-		
-		
+	
+	
 display_sequence:
 	mov r0, V_SEED_L
 	mov r1, V_SEED_H
@@ -96,7 +92,7 @@ game_over:
 	mov P3, a
 	lcall delay_display
 	mov a, P3
-	orl a, #~P_LED_ALL	;#~P_LED_ALL is refered to as iram rather than immediate.
+	orl a, #~P_LED_ALL	;~#P_LED_ALL is refered to as iram rather than immediate.
 	mov P3, a
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE
