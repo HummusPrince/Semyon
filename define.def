@@ -13,6 +13,8 @@ T2H == 0xd6
 
 
 ;Parameter values
+P_STACK_BASE == 0x50
+
 P_LFSRMASK_L == 0x11
 P_LFSRMASK_H == 0xa0
 
