@@ -12,3 +12,9 @@
 .include "io.asm"
 .include "delay.asm"
 .include "pwm.asm"
+
+;				T0		T2
+;	seed				+
+;	delay		+		
+;	pwm 		+		
+;	debounce	+		

@@ -2,7 +2,7 @@
 
 .area CODE
 delay_debounce:
-	t0_set_count, 0x400
+	t0_set_count, 0x00b4 	;about 2ms
 	sjmp delay_activate	
 
 delay_display2:
@@ -22,11 +22,9 @@ delay_activate:
 	orl PCON2, #0x07 	;clk/128
 	interrupt_enable
 	setb TR0
-	orl AUXR, #0x10 	;enable T2
 	
 	orl PCON, #0x01 	;IDL
 	
-	anl AUXR, #~0x10 	;disable T2
 	clr TR0
 	interrupt_disable
 	anl PCON2, #~0x07 	;clk/1
