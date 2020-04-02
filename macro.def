@@ -11,6 +11,7 @@
 
 ;ext_int
 .macro ext_int_enable
+	orl TCON, #0x05 	;IT1|IT0 - falling edge only
 	orl IE, #0x05	;EX1 | EX0
 	orl AUXR2, #0x30	;EX3 | EX2
 .endm
@@ -18,6 +19,10 @@
 .macro ext_int_disable
 	anl AUXR2, #~0x30	;EX3 | EX2
 	anl IE, #~0x05	;EX1 | EX0
+.endm
+
+.macro clear_ext_int_flags
+	anl TCON, #~0x0a
 .endm
 
 ;t0_int
@@ -50,35 +55,29 @@
 .endm
 
 
+;Functions
 .macro ext_int_get_input, pd_flag, ?rand
 ext_int_get_input_beginning'rand: 
+	clear_ext_int_flags 	;Neccesary as IE0/1 will be set *regardless* of any SFR value.
 	ext_int_enable
 	interrupt_enable
 	.if pd_flag = 1
-		orl PCON, #0x02 	;PD = power down
+		orl PCON, #0x01 	;PD = power down
 	.else
 		orl PCON, #0x01 	;IDL
 	.endif
 	interrupt_disable
+	
 	mov dptr, #D_LEDLOC
 	mov a, V_INTERRUPT_LED
 	anl a, #0x03
 	movc a, @a+dptr
 	mov V_PWM_LED, a
-	
-	lcall delay_debounce
-	
-	xrl a, P3
-	orl a, #P_LED_ALL
-	cpl a
-	
-	jnz ext_int_get_input_beginning'rand
-	
+
 	ext_int_get_input_release'rand:
-		lcall delay_debounce
+		;lcall delay_debounce
 		mov a, P3
-		orl a, #P_LED_ALL
-		cpl a
-		jnz ext_int_get_input_release'rand
+		anl a, V_PWM_LED
+		jz ext_int_get_input_release'rand
 	lcall pwm_led
 .endm

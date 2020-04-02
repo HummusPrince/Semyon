@@ -92,7 +92,7 @@ game_over:
 	mov P3, a
 	lcall delay_display
 	mov a, P3
-	orl a, #~P_LED_ALL	;~#P_LED_ALL is refered to as iram rather than immediate.
+	orl a, #~P_LED_ALL
 	mov P3, a
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE

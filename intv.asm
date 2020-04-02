@@ -3,7 +3,7 @@
 .area INTV (ABS)
 .org 0x0000
 _int_reset:
-	ljmp main
+	ljmp reset_handler
 
 
 .org 0x0003 	;ext0
@@ -27,7 +27,7 @@ _int_YLED:
 .org 0x005b 	;ext3
 _int_RLED:
 	mov V_INTERRUPT_LED, #P_N_LED_R
-	ljmp ext_interrupt_handler	
+	ljmp ext_interrupt_handler
 
 	
 	
