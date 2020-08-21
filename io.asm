@@ -1,4 +1,9 @@
+.module io
 .title "IOs and sequence gen."
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area CODE
 get_led_color:

@@ -1,4 +1,9 @@
+.module inth
 .title "interrupt handles"
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area CODE
 

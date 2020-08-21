@@ -1,4 +1,9 @@
+.module main
 .title "main code"
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area CODE(REL)
 
@@ -71,7 +76,7 @@ get_user_input:
 	
 	get_user_input_loop1:
 		lcall get_led_color
-		ext_int_get_input, 1		;macro call - power down mode
+		ext_int_get_input, 1	;macro call - power down mode
 		mov a, V_INTERRUPT_LED
 		xrl a, r3
 		jnz get_user_input_game_over

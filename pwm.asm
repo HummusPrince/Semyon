@@ -1,4 +1,9 @@
+.module pwm
 .title "PWM routines"
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area CODE
 

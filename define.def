@@ -2,7 +2,6 @@
 
 ;IRC freq == 11.0592MHz
 
-
 ;SFRs
 PCON2 == 0x97
 AUXR == 0x8e

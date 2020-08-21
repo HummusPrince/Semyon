@@ -1,5 +1,11 @@
 -mxiu
 semyon
-semyon
+main
+intv
+inth
+delay
+pwm
+dseg
+io
 -b CODE = 0x0090
 -e

@@ -1,4 +1,9 @@
+.module delay
 .title "delay routines"
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area CODE
 delay_debounce:

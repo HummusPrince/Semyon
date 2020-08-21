@@ -1,4 +1,9 @@
+.module intv
 .title "interrupt vectors"
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area INTV (ABS)
 .org 0x0000

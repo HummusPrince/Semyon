@@ -58,7 +58,7 @@
 ;Functions
 .macro ext_int_get_input, pd_flag, ?rand
 ext_int_get_input_beginning'rand: 
-	clear_ext_int_flags 	;Neccesary as IE0/1 will be set *regardless* of any SFR value.
+	clear_ext_int_flags 	;Necessary as IE0/1 will be set *regardless* of any SFR value.
 	ext_int_enable
 	interrupt_enable
 	.if pd_flag = 1

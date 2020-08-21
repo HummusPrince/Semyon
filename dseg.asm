@@ -1,4 +1,9 @@
+.module dseg
 .title "data segment"
+
+;Def file includes
+.include "define.def"
+.include "macro.def"
 
 .area DATA(REL, CON)
 D_LEDLOC == . 	;That's a define!
