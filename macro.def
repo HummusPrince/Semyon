@@ -54,8 +54,21 @@
 	mov T2H, #((0x10000-count)>>8)&0xff
 .endm
 
+;idle mode
+.macro idl_mode
+	orl PCON, #0x01 	;IDL
+.endm
+
 
 ;Functions
+.macro get_pwm_led
+	mov dptr, #D_LEDLOC
+	mov a, V_INTERRUPT_LED
+	anl a, #0x03
+	movc a, @a+dptr
+	mov V_PWM_LED, a
+.endm
+
 .macro ext_int_get_input, pd_flag, ?rand
 ext_int_get_input_beginning'rand: 
 	clear_ext_int_flags 	;Necessary as IE0/1 will be set *regardless* of any SFR value.
@@ -67,17 +80,19 @@ ext_int_get_input_beginning'rand:
 		orl PCON, #0x01 	;IDL
 	.endif
 	interrupt_disable
-	
-	mov dptr, #D_LEDLOC
-	mov a, V_INTERRUPT_LED
-	anl a, #0x03
-	movc a, @a+dptr
-	mov V_PWM_LED, a
+	get_pwm_led
+.endm
 
-	ext_int_get_input_release'rand:
+.macro release_button, ?rand
+	release'rand:
 		;lcall delay_debounce
 		mov a, P3
 		anl a, V_PWM_LED
-		jz ext_int_get_input_release'rand
+		jz release'rand
 	lcall pwm_led
 .endm
+
+;Byte to bit
+;.macro bit_addr, byte_addr, bit_num
+	;.error byte_addr & 0x20 != 0x20 
+	

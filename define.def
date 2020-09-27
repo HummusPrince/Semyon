@@ -28,6 +28,7 @@ P_N_LED_Y == 0x01
 P_N_LED_G == 0x02
 P_N_LED_B == 0x03
 
+P_INTERRUPT_LED_NULL == 0xa5
 
 ;State values
 S_INITIALIZE == 0x00
@@ -45,10 +46,16 @@ V_SEED_L == 0x20
 V_SEED_H == 0x21
 V_INTERRUPT_LED == 0x32
 V_PWM_LED == 0x33
+V_LAST_P3 == 0x22
 
 
 ;Bool variables bit-addresses
-RLED == P3.5		;INT3
+RLED == P3.5 	;INT3
 YLED == P3.4 	;INT2
 GLED == P3.2 	;INT0
-BLED == P3.3		;INT1
+BLED == P3.3 	;INT1
+
+VB_RED = (V_LAST_P3 - 0x20) * 8 + 5
+VB_YEL = (V_LAST_P3 - 0x20) * 8 + 4
+VB_GRE = (V_LAST_P3 - 0x20) * 8 + 2
+VB_BLU = (V_LAST_P3 - 0x20) * 8 + 3

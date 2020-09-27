@@ -36,7 +36,7 @@ main:
 initialize:
 	;This is the initialization phase of semyon.
 	;It should also generate the seed value for PRNG.
-	
+	mov V_INTERRUPT_LED, #P_INTERRUPT_LED_NULL
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
 	mov T2L, #0x01
@@ -44,6 +44,7 @@ initialize:
 	orl AUXR, #0x14		;T2 enable || T2 is 1clk
 	
 	ext_int_get_input, 0	;macro call - idle mode
+	release_button
 	
 	anl AUXR, #~0x10	;T2 disable
 	mov V_SEED_L, T2L
@@ -51,14 +52,13 @@ initialize:
 	lcall delay_display
 	mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
-	
-	
+
+
 display_sequence:
 	mov r0, V_SEED_L
 	mov r1, V_SEED_H
 	mov a, V_LED_MAX
 	mov V_LED_CNT, a
-	
 	display_sequence_loop1:
 		lcall get_led_color
 		lcall display_led
@@ -67,7 +67,7 @@ display_sequence:
 	mov V_STATE, #S_GET_USER_INPUT
 	ret
 
-	
+
 get_user_input:
 	mov r0, V_SEED_L
 	mov r1, V_SEED_H
@@ -76,10 +76,15 @@ get_user_input:
 	
 	get_user_input_loop1:
 		lcall get_led_color
+		mov a, #P_INTERRUPT_LED_NULL
+		cjne a, V_INTERRUPT_LED, get_user_input_overlapping_led
 		ext_int_get_input, 1	;macro call - power down mode
+	get_user_input_overlapping_led:
+		release_button
 		mov a, V_INTERRUPT_LED
 		xrl a, r3
 		jnz get_user_input_game_over
+		mov V_INTERRUPT_LED, #P_INTERRUPT_LED_NULL
 		djnz V_LED_CNT, get_user_input_loop1
 	lcall delay_display
 	inc V_LED_MAX
@@ -88,7 +93,7 @@ get_user_input:
 	get_user_input_game_over:
 		mov V_STATE, #S_GAME_OVER
 		ret
-	
+
 
 game_over:
 	lcall delay_display

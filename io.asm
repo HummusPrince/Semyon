@@ -46,4 +46,37 @@ display_led:
 	xrl P3, a
 	lcall delay_display
 	lcall pwm_led
+	lcall get_overlap_buttons
+	ret
+
+
+get_overlap_buttons:
+	;This one gets buttons that were clicked DURING PWM sequence.
+	;It helps get the buttons response better.
+	;Right now it won't get fast clicks on the same button it used.
+	
+	mov a, V_PWM_LED
+	orl V_LAST_P3, a
+		
+	get_overlap_buttons_red:
+	jb VB_RED, get_overlap_buttons_yel
+		mov V_INTERRUPT_LED, #P_N_LED_R
+		sjmp get_overlap_buttons_return
+	get_overlap_buttons_yel:
+	jb VB_YEL, get_overlap_buttons_gre
+		mov V_INTERRUPT_LED, #P_N_LED_Y
+		sjmp get_overlap_buttons_return
+	get_overlap_buttons_gre:
+	jb VB_GRE, get_overlap_buttons_blu
+		mov V_INTERRUPT_LED, #P_N_LED_G
+		sjmp get_overlap_buttons_return
+	get_overlap_buttons_blu:
+	jb VB_BLU, get_overlap_buttons_retnull
+		mov V_INTERRUPT_LED, #P_N_LED_B
+		;sjmp get_overlap_buttons_return
+	get_overlap_buttons_return:
+		get_pwm_led
+		ret
+	get_overlap_buttons_retnull:
+	mov V_INTERRUPT_LED, #P_INTERRUPT_LED_NULL
 	ret
