@@ -61,13 +61,6 @@
 
 
 ;Functions
-.macro get_pwm_led
-	mov dptr, #D_LEDLOC
-	mov a, V_INTERRUPT_LED
-	anl a, #0x03
-	movc a, @a+dptr
-	mov V_PWM_LED, a
-.endm
 
 .macro ext_int_get_input, pd_flag, ?rand
 ext_int_get_input_beginning'rand: 
@@ -80,7 +73,8 @@ ext_int_get_input_beginning'rand:
 		orl PCON, #0x01 	;IDL
 	.endif
 	interrupt_disable
-	get_pwm_led
+	lcall get_pwm_led
+	release_button
 .endm
 
 .macro release_button, ?rand

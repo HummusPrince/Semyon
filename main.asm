@@ -36,7 +36,6 @@ main:
 initialize:
 	;This is the initialization phase of semyon.
 	;It should also generate the seed value for PRNG.
-	mov V_INTERRUPT_LED, #P_INTERRUPT_LED_NULL
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
 	mov T2L, #0x01
@@ -44,7 +43,6 @@ initialize:
 	orl AUXR, #0x14		;T2 enable || T2 is 1clk
 	
 	ext_int_get_input, 0	;macro call - idle mode
-	release_button
 	
 	anl AUXR, #~0x10	;T2 disable
 	mov V_SEED_L, T2L
@@ -73,18 +71,27 @@ get_user_input:
 	mov r1, V_SEED_H
 	mov a, V_LED_MAX
 	mov V_LED_CNT, a
+	mov V_OVERLAP_LED, #P_OVERLAP_LED_NULL
+
 	
 	get_user_input_loop1:
 		lcall get_led_color
-		mov a, #P_INTERRUPT_LED_NULL
-		cjne a, V_INTERRUPT_LED, get_user_input_overlapping_led
+		mov a, #P_OVERLAP_LED_NULL
+		cjne a, V_OVERLAP_LED, get_user_input_overlapping_led
 		ext_int_get_input, 1	;macro call - power down mode
+		lcall get_overlap_buttons 
+		;The get_overlap_buttons is here rather than in the release_button macro
+		;to prevent a double overlap - which's usually wrong and unwanted.
+		sjmp get_user_input_release
 	get_user_input_overlapping_led:
+		mov V_INTERRUPT_LED, V_OVERLAP_LED
+		mov V_OVERLAP_LED, #P_OVERLAP_LED_NULL
+		lcall get_pwm_led
 		release_button
+	get_user_input_release:
 		mov a, V_INTERRUPT_LED
 		xrl a, r3
 		jnz get_user_input_game_over
-		mov V_INTERRUPT_LED, #P_INTERRUPT_LED_NULL
 		djnz V_LED_CNT, get_user_input_loop1
 	lcall delay_display
 	inc V_LED_MAX

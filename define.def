@@ -28,7 +28,7 @@ P_N_LED_Y == 0x01
 P_N_LED_G == 0x02
 P_N_LED_B == 0x03
 
-P_INTERRUPT_LED_NULL == 0xa5
+P_OVERLAP_LED_NULL == 0xa5
 
 ;State values
 S_INITIALIZE == 0x00
@@ -47,6 +47,7 @@ V_SEED_H == 0x21
 V_INTERRUPT_LED == 0x32
 V_PWM_LED == 0x33
 V_LAST_P3 == 0x22
+V_OVERLAP_LED == 0x34
 
 
 ;Bool variables bit-addresses

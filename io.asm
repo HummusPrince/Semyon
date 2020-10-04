@@ -46,7 +46,6 @@ display_led:
 	xrl P3, a
 	lcall delay_display
 	lcall pwm_led
-	lcall get_overlap_buttons
 	ret
 
 
@@ -60,23 +59,32 @@ get_overlap_buttons:
 		
 	get_overlap_buttons_red:
 	jb VB_RED, get_overlap_buttons_yel
-		mov V_INTERRUPT_LED, #P_N_LED_R
+		mov V_OVERLAP_LED, #P_N_LED_R
 		sjmp get_overlap_buttons_return
 	get_overlap_buttons_yel:
 	jb VB_YEL, get_overlap_buttons_gre
-		mov V_INTERRUPT_LED, #P_N_LED_Y
+		mov V_OVERLAP_LED, #P_N_LED_Y
 		sjmp get_overlap_buttons_return
 	get_overlap_buttons_gre:
 	jb VB_GRE, get_overlap_buttons_blu
-		mov V_INTERRUPT_LED, #P_N_LED_G
+		mov V_OVERLAP_LED, #P_N_LED_G
 		sjmp get_overlap_buttons_return
 	get_overlap_buttons_blu:
 	jb VB_BLU, get_overlap_buttons_retnull
-		mov V_INTERRUPT_LED, #P_N_LED_B
+		mov V_OVERLAP_LED, #P_N_LED_B
 		;sjmp get_overlap_buttons_return
 	get_overlap_buttons_return:
-		get_pwm_led
+		;get_pwm_led
 		ret
 	get_overlap_buttons_retnull:
-	mov V_INTERRUPT_LED, #P_INTERRUPT_LED_NULL
+	mov V_OVERLAP_LED, #P_OVERLAP_LED_NULL
+	ret
+
+
+get_pwm_led:
+	mov dptr, #D_LEDLOC
+	mov a, V_INTERRUPT_LED
+	anl a, #0x03
+	movc a, @a+dptr
+	mov V_PWM_LED, a
 	ret
