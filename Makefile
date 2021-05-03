@@ -8,8 +8,7 @@ LD = aslink
 #LD = sdld
 LDFLAGS = -f
 
-#FILES = main intv inth io delay dseg pwm
-FILES = main.rel intv.rel inth.rel io.rel delay.rel dseg.rel pwm.rel
+FILES = main intv inth io delay dseg pwm
 BIN = semyon
 
 
@@ -20,8 +19,7 @@ BIN = semyon
 %.hex: %.ihx
 	packihx $^ > $@
 
-#%.ihx: %{FILES:.asm=.rel}
-%.ihx: ${FILES}
+%.ihx: ${addsuffix .rel, ${FILES}}
 	${LD} ${LDFLAGS} $@
 
 
