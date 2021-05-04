@@ -46,3 +46,7 @@ clean:
 	rm -f *.rst
 	rm -f *.sym
 	rm -f *.hlr
+	
+.PHONY: cleanall
+cleanall:
+	rm -f *.hex
