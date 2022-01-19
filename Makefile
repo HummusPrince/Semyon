@@ -8,6 +8,9 @@ LD = aslink
 #LD = sdld
 LDFLAGS = -f
 
+PRG = stcgal
+PRGFLAGS = -P stc15 -b 1200
+
 FILES = main intv inth io delay dseg pwm
 BIN = semyon
 
@@ -48,5 +51,9 @@ clean:
 	rm -f *.hlr
 	
 .PHONY: cleanall
-cleanall:
+cleanall: clean
 	rm -f *.hex
+
+.PHONY: flash
+flash: ${BIN}.hex
+	${PRG} ${PRGFLAGS} $^
