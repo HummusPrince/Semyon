@@ -42,13 +42,7 @@ table:
 
 .PHONY: clean
 clean:
-	rm -f *.ihx
-	rm -f *.rel
-	rm -f *.map
-	rm -f *.lst
-	rm -f *.rst
-	rm -f *.sym
-	rm -f *.hlr
+	rm -f *.{ihx,rel,map,lst,sym,hlr,rst}
 	
 .PHONY: cleanall
 cleanall: clean
