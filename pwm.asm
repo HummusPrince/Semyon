@@ -47,14 +47,27 @@ pwm_led_loop:
 		mov a, V_PWM_LED
 		idl_mode
 		xrl P3, a
+        .ifdef B_8G1K08A
+            xrl P5, a
+        .endif
 		idl_mode
 		orl P3, a
+        .ifdef B_8G1K08A
+            orl P5, a
+        .endif
 		;anl PCON2, #~0x07 	;clk/1
 		clr TR0
 		mov TL0, #0x00
 		djnz r6, pwm_led_cycle
 
 	mov a, P3
+    .ifdef B_8G1K08A ;Merge P3 and P5
+        orl a, #0xf0
+        mov r4, a
+        mov a, P5
+        orl a, #0x0f
+        anl a, r4
+    .endif
 	anl V_LAST_P3, a
 		
 	djnz r5, pwm_led_loop	

@@ -43,7 +43,12 @@ display_led:
 	anl a, #0x03
 	movc a, @a+dptr
 	mov V_PWM_LED, a
-	xrl P3, a
+
+    xrl P3, a
+    .ifdef B_8G1K08A
+        xrl P5, a
+    .endif
+
 	lcall delay_display
 	lcall pwm_led
 	ret

@@ -9,11 +9,13 @@ LD = aslink
 LDFLAGS = -f
 
 PRG = stcgal
-PRGFLAGS = -P stc15 -b 1200
+PRGFLAGS = -P stc8 -b 1200
 
 FILES = main intv inth io delay dseg pwm
 BIN = semyon
+STC8ASFLG = -i .list -i B_8G1K08A==0
 
+ASFLAGS += ${STC8ASFLG}
 
 ##Rules
 %.rel: %.asm
