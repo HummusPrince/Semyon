@@ -72,6 +72,9 @@ ext_int_get_input_beginning'rand:
 	.else
 		orl PCON, #0x01 	;IDL
 	.endif
+    nop
+    nop
+    nop
 	interrupt_disable
 	lcall get_pwm_led
 	release_button
@@ -81,7 +84,14 @@ ext_int_get_input_beginning'rand:
 	release'rand:
 		;lcall delay_debounce
 		mov a, P3
-		anl a, V_PWM_LED
+        .ifdef B_8G1K08A
+            anl a, #0x0f
+            mov r4, a
+            mov a, P5
+            anl a, #0xf0
+            orl a, r4
+        .endif
+	    anl a, V_PWM_LED
 		jz release'rand
 	lcall pwm_led
 .endm

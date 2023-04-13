@@ -46,17 +46,31 @@ initialize:
 
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1
-	mov T2L, #0x01
-	mov T2H, #0x00
-	orl AUXR, #0x14		;T2 enable || T2 is 1clk
-	
+	.ifdef B_8G1K08A
+        mov TL1, #0x01
+        mov TH1, #0x00
+        anl TMOD, #~0x30    ;T1 is 16 bit autoreload
+        orl AUXR, #0x40     ;T1 is 1clk
+        setb TR1
+    .else
+        mov T2L, #0x01
+	    mov T2H, #0x00
+	    orl AUXR, #0x14		;T2 enable || T2 is 1clk
+	.endif
 	ext_int_get_input, 0	;macro call - idle mode
 	
-	anl AUXR, #~0x10	;T2 disable
-	mov V_SEED_L, T2L
-	mov V_SEED_H, T2H
-	lcall delay_display
-	mov V_STATE, #S_DISPLAY_SEQUENCE
+	.ifdef B_8G1K08A
+        clr TR1
+        mov V_SEED_L, TL1
+        mov V_SEED_H, TH1
+    .else
+        anl AUXR, #~0x10	;T2 disable
+        mov V_SEED_L, T2L
+        mov V_SEED_H, T2H
+    .endif
+
+    lcall delay_display
+    mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
 
 

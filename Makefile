@@ -9,7 +9,7 @@ LD = aslink
 LDFLAGS = -f
 
 PRG = stcgal
-PRGFLAGS = -P stc8 -b 1200
+PRGFLAGS = -t 11059 
 
 FILES = main intv inth io delay dseg pwm
 BIN = semyon

@@ -7,21 +7,24 @@
 ;B_8G1K08A == 0
 
 ;SFRs
-PCON2 == 0x97
 AUXR == 0x8e
 AUXR2 == 0x8f
+.ifdef B_8G1K08A
+    INTCLKO == AUXR2
+    P5 == 0xc8
+    P5M0 == 0xca
+    P5M1 == 0xc9
+    CLKDIV == 0xFE01
+.else
+    PCON2 == 0x97
+    T2L == 0xd7 	;non standard T2 timer, doh!
+    T2H == 0xd6
+.endif
 IE2 == 0xaf
-T2L == 0xd7 	;non standard T2 timer, doh!
-T2H == 0xd6
 
 ;STC port mode SFRs
 P3M0 == 0xb2
 P3M1 == 0xb1
-.ifdef B_8G1K08A
-    P5 == 0xc8
-    P5M0 == 0xca
-    P5M1 == 0xc9
-.endif
 
 ;Parameter values
 P_STACK_BASE == 0x50

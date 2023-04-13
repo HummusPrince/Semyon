@@ -24,7 +24,13 @@ delay_activate:
 	orl AUXR, #0x80 	;T0 is 1clk
 	t0_int_enable		;Enable T0 interrupt
 	
-	orl PCON2, #0x07 	;clk/128
+	.ifdef B_8G1K08A
+        mov dptr, #CLKDIV
+        mov a, #0x80    ;clk/128
+        movx @dptr, a
+    .else
+	    orl PCON2, #0x07 	;clk/128
+    .endif
 	interrupt_enable
 	setb TR0
 	
@@ -32,5 +38,11 @@ delay_activate:
 	
 	clr TR0
 	interrupt_disable
-	anl PCON2, #~0x07 	;clk/1
+	.ifdef B_8G1K08A
+        mov dptr, #CLKDIV
+        mov a, #0x00    ;clk/1
+        movx @dptr, a
+    .else
+	    anl PCON2, #~0x07 	;clk/1
+    .endif
 	ret
