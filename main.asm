@@ -42,6 +42,9 @@ initialize:
     .ifdef B_8G1K08A
         mov P5M0, #0x00
         mov P5M1, #0x00
+        mov dptr, #CLKDIV
+        mov a, #0x00    ;clk/1
+        movx @dptr, a
     .endif
 
 	mov V_LED_CNT, #1
@@ -57,6 +60,7 @@ initialize:
 	    mov T2H, #0x00
 	    orl AUXR, #0x14		;T2 enable || T2 is 1clk
 	.endif
+
 	ext_int_get_input, 0	;macro call - idle mode
 	
 	.ifdef B_8G1K08A
@@ -68,7 +72,7 @@ initialize:
         mov V_SEED_L, T2L
         mov V_SEED_H, T2H
     .endif
-
+    
     lcall delay_display
     mov V_STATE, #S_DISPLAY_SEQUENCE
 	ret
@@ -126,13 +130,15 @@ get_user_input:
 
 game_over:
 	lcall delay_display
-	mov a, P3
-	anl a, #P_LED_ALL
-	mov P3, a
+	anl P3, #P_LED_ALL
+	.ifdef B_8G1K08A
+        anl P5, #P_LED_ALL
+    .endif
 	lcall delay_display
-	mov a, P3
-	orl a, #~P_LED_ALL
-	mov P3, a
+	orl P3, #~P_LED_ALL
+	.ifdef B_8G1K08A
+        orl P5, #~P_LED_ALL
+    .endif
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE
 	ret

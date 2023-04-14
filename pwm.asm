@@ -19,12 +19,12 @@ pwm_led:
 	t0_int_enable
 	interrupt_enable
 	
-	mov dptr, #D_LEDPWM - 1	;Base address for the data
 	mov r5, #D_LEDPWM_LEN
 	
 	
 pwm_led_loop:
 	;get pwm duration
+	mov dptr, #D_LEDPWM - 1	;Base address for the data
 	mov a, r5
 	movc a, @a+dptr
 	mov r6, a
@@ -72,15 +72,7 @@ pwm_led_loop:
 		clr TR0
 		mov TL0, #0x00
 		djnz r6, pwm_led_cycle
-
-	mov a, P3
-    .ifdef B_8G1K08A ;Merge P3 and P5
-        orl a, #0xf0
-        mov r4, a
-        mov a, P5
-        orl a, #0x0f
-        anl a, r4
-    .endif
+    read_io
 	anl V_LAST_P3, a
 		
 	djnz r5, pwm_led_loop	
@@ -89,6 +81,7 @@ pwm_led_loop:
 
 	;orl V_LAST_P3, #0xc3
 	;mov P3, V_LAST_P3
+    ;mov P5, V_LAST_P3
 	;sjmp .
 	
 	ret

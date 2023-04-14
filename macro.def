@@ -35,8 +35,8 @@
 .endm
 
 .macro t0_set_count, count
-	mov TL0, #(0x10000-count)&0xff
-	mov TH0, #((0x10000-count)>>8)&0xff
+	mov TL0, #(0xffff-count)&0xff
+	mov TH0, #((0xffff-count)>>8)&0xff
 .endm
 
 
@@ -57,6 +57,17 @@
 ;idle mode
 .macro idl_mode
 	orl PCON, #0x01 	;IDL
+    nop
+    nop
+    nop
+.endm
+
+;idle mode
+.macro pd_mode
+	orl PCON, #0x02 	;PD
+    nop
+    nop
+    nop
 .endm
 
 
@@ -68,13 +79,10 @@ ext_int_get_input_beginning'rand:
 	ext_int_enable
 	interrupt_enable
 	.if pd_flag = 1
-		orl PCON, #0x01 	;PD = power down
+        pd_mode     ;PD = power down
 	.else
-		orl PCON, #0x01 	;IDL
+		idl_mode 	;IDL
 	.endif
-    nop
-    nop
-    nop
 	interrupt_disable
 	lcall get_pwm_led
 	release_button
@@ -82,7 +90,13 @@ ext_int_get_input_beginning'rand:
 
 .macro release_button, ?rand
 	release'rand:
-		;lcall delay_debounce
+        read_io
+	    anl a, V_PWM_LED
+		jz release'rand
+	lcall pwm_led
+.endm
+
+.macro read_io
 		mov a, P3
         .ifdef B_8G1K08A
             anl a, #0x0f
@@ -91,10 +105,7 @@ ext_int_get_input_beginning'rand:
             anl a, #0xf0
             orl a, r4
         .endif
-	    anl a, V_PWM_LED
-		jz release'rand
-	lcall pwm_led
-.endm
+    .endm
 
 ;Byte to bit
 ;.macro bit_addr, byte_addr, bit_num
