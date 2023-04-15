@@ -21,8 +21,7 @@ delay_display:
 delay_activate:
 	anl TMOD, #~0x03
 	orl TMOD, #0x01 	;mode 1 (16-bit one-time)
-	;orl AUXR, #0x80 	;T0 is 1clk
-	anl AUXR, #~0x80 	;T0 is 12clk
+	orl AUXR, #0x80 	;T0 is 1clk
 	t0_int_enable		;Enable T0 interrupt
 	
 	.ifdef B_8G1K08A

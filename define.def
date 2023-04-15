@@ -15,6 +15,7 @@ AUXR2 == 0x8f
     P5M0 == 0xca
     P5M1 == 0xc9
     CLKDIV == 0xFE01
+    P_SW2 == 0xba
 .else
     PCON2 == 0x97
     T2L == 0xd7 	;non standard T2 timer, doh!
