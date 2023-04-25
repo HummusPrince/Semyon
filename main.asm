@@ -138,6 +138,7 @@ game_over:
 	.ifdef B_8G1K08A
         orl P5, #~P_LED_ALL
     .endif
+
 	lcall delay_display
 	mov V_STATE, #S_INITIALIZE
 	ret

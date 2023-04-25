@@ -7,15 +7,15 @@
 
 .area CODE
 delay_debounce:
-	t0_set_count, 0x0010
+	t0_set_count, 0x0080
 	sjmp delay_activate
 
 delay_display2:
-	t0_set_count, 0x2000
+	t0_set_count, 0x6000
 	sjmp delay_activate
 
 delay_display:
-	t0_set_count, 0x5000
+	t0_set_count, 0xf000
 	;sjmp delay_activate
 	
 delay_activate:

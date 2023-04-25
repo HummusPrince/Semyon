@@ -38,11 +38,11 @@ pwm_led_loop:
 	
 	pwm_led_cycle:	
 		clr a
-		clr c
-        set_clk_div, 4
+        set_clk_div, 1
 		setb TR0
 		;subb a, TH0 	;For some mysterious reason this read fails miserably (0x00 returned probably)
-		subb a, r7
+		mov a, #0xff
+        xrl a, r7
 		mov TH0, a
 		mov a, V_PWM_LED
 		idl_mode

@@ -23,6 +23,9 @@
 
 .macro clear_ext_int_flags
 	anl TCON, #~0x0a
+    .ifdef B_8G1K08A
+        anl AUXINTIF, #~0x70    ;Clear external flags 2-4
+    .endif
 .endm
 
 ;t0_int
