@@ -43,26 +43,8 @@ initialize:
         mov P5M0, #0x00
         mov P5M1, #0x00
         orl P_SW2, #0x80    ;Enable XRAM writes
-        mov dptr, #CLKDIV 
-        mov a, #0x00    ;clk/1
-        movx @dptr, a
-        nop
-        movx a, @dptr
-        ;swap a
-        ;cpl a
-        ;rl a
-        ;rl a
-        ;orl a, #0xc3
-        ;mov P3, a
-        ;mov P5, a
-        ;sjmp .
-        ;xrl a, #0xff
-        ;cpl P3.2
-        ;jnz .
-        ;cpl P3.2
-        ;cpl P3.3
-        ;sjmp .-2
     .endif
+    set_clk_div, 0
 
 	mov V_LED_CNT, #1
 	mov V_LED_MAX, #1

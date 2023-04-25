@@ -39,13 +39,7 @@ pwm_led_loop:
 	pwm_led_cycle:	
 		clr a
 		clr c
-        .ifdef B_8G1K08A
-            mov dptr, #CLKDIV
-            mov a, #0x10    ;clk/16
-            movx @dptr, a
-        .else
-            orl PCON2, #0x04 	;clk/16
-        .endif
+        set_clk_div, 4
 		setb TR0
 		;subb a, TH0 	;For some mysterious reason this read fails miserably (0x00 returned probably)
 		subb a, r7
@@ -61,14 +55,8 @@ pwm_led_loop:
         .ifdef B_8G1K08A
             orl P5, a
         .endif
-
-        .ifdef B_8G1K08A
-            mov dptr, #CLKDIV
-            mov a, #0x00    ;clk/1
-            movx @dptr, a
-        .else
-		    anl PCON2, #~0x07 	;clk/1
-        .endif
+        set_clk_div, 0
+        
 		clr TR0
 		mov TL0, #0x00
 		djnz r6, pwm_led_cycle

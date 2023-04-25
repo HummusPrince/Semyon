@@ -107,6 +107,19 @@ ext_int_get_input_beginning'rand:
         .endif
     .endm
 
+.macro set_clk_div, div
+    .iflt 7-div
+        .error 1     ;Clock Divide value too large!
+    .endif
+    .ifdef B_8G1K08A
+        mov dptr, #CLKDIV
+        mov a, #(0x01<<div)    ;clk/(2^div)
+        movx @dptr, a
+    .else
+        anl PCON2, #0x07
+        orl PCON2, #div 	;clk/(2^div)
+    .endif
+.endm
 ;Byte to bit
 ;.macro bit_addr, byte_addr, bit_num
 	;.error byte_addr & 0x20 != 0x20 
